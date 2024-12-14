@@ -1,2 +1,5 @@
 iracingdataapi
 requests
+b2sdk
+duckdb
+clickhouse-connect

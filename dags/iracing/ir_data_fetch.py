@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
+from b2_upload import BackblazeB2UploadOperator
 
 default_args = {
     "owner": "airflow",
@@ -15,9 +16,12 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-dag_id = "SomethingDag"
+
+def do_the_thing():
+    print("Doing the thing")
+
+dag_id = "IrDataFetchDag"
 with DAG(dag_id=dag_id, default_args=default_args, schedule_interval="@daily") as dag:
-    dummy_task = DummyOperator(task_id="dummy_task")
-    something = PythonOperator(task_id="something", python_callable=lambda: print("Something"))
+    something = PythonOperator(task_id="something", python_callable=do_the_thing)
     
-    dummy_task
+    something
