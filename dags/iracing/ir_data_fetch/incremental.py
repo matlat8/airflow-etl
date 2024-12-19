@@ -69,4 +69,10 @@ with DAG(dag_id=dag_id,
         wait_for_completion=True,
     )
     
-    start_time >> run_data_pull_dag
+    run_version_results_dag = TriggerDagRunOperator(
+        task_id='run_version_results_dag',
+        trigger_dag_id='IrVersionResults',
+        wait_for_completion=True
+    )
+    
+    start_time >> run_data_pull_dag >> run_version_results_dag
