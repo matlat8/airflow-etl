@@ -10,6 +10,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.decorators import task
 from airflow.hooks.base import BaseHook
 from airflow.utils.trigger_rule import TriggerRule
+from airflow.sensors.external_task_sensor import ExternalTaskSensor
 
 from b2sdk.v2 import InMemoryAccountInfo, B2Api, AuthInfoCache
 
@@ -89,7 +90,7 @@ def find_files_to_process(directory='STG/iRacing/results/'):
     
 dag_id = "IrVersionResults"
 dag_timeout = timedelta(hours=1)
-with DAG(dag_id=dag_id, default_args=default_args, schedule_interval="@hourly") as dag:
+with DAG(dag_id=dag_id, default_args=default_args, schedule_interval=None) as dag:
     
     @task
     def find_raw_files():
@@ -286,11 +287,21 @@ with DAG(dag_id=dag_id, default_args=default_args, schedule_interval="@hourly") 
         client.command(query)
         
         
-        
+    wait_for_ir_data_fetch_incremental = ExternalTaskSensor(
+        task_id="wait_for_ir_data_fetch_incremental",
+        external_dag_id="IrDataFetchIncremental",  # The DAG ID of the upstream DAG
+        external_task_id=None,  # Wait for the entire DAG to complete
+        mode="poke",
+        timeout=600,  # Timeout in seconds
+        poke_interval=60,  # Poke interval in seconds
+        soft_fail=False,
+    )
     
     # First, create a branching structure
     raw_files = find_raw_files()
-
+    
+    wait_for_ir_data_fetch_incremental >> raw_files
+    
     # Add a placeholder task that will run if there are no raw files
     empty_process = EmptyOperator(
         task_id='skip_pre_process',
