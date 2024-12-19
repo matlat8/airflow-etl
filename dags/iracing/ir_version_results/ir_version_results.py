@@ -11,6 +11,7 @@ from airflow.decorators import task
 from airflow.hooks.base import BaseHook
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
+from airflow.models import Variable
 
 from b2sdk.v2 import InMemoryAccountInfo, B2Api, AuthInfoCache
 
@@ -255,23 +256,7 @@ with DAG(dag_id=dag_id,
                 os.remove(f'temp/{file}')
         os.rmdir('temp')
         
-        filepath = s3_path.split('/')
-        prefix = '/'.join(filepath)
-        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-        if 'Contents' in response:
-            json_files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.parquet')]
-            if json_files:
-                delete_response = s3_client.delete_objects(
-                    Bucket=bucket_name,
-                    Delete={
-                        'Objects': [{'Key': key} for key in json_files]
-                    }
-                )
-                print(f'deleted the following json files: {json_files}')
-            else:
-                print('no json files found in the specified directory')
-        else:
-            print('no files found in the specified directory')
+
         
         
         
@@ -307,6 +292,28 @@ with DAG(dag_id=dag_id,
         with open(os.path.join(py_file_path, 'CH_insert_session_results.sql'), 'r') as f:
             query = f.read()
         client.command(query)
+        
+        import boto3
+        s3_path = 'STG/iRacing/results/session_results/'
+        bucket_name = Variable.get('B2_BUCKET')
+        s3_client = boto3.client('s3', aws_access_key_id=s3_conn.login, aws_secret_access_key=s3_conn.password, endpoint_url=s3_conn.host)
+        filepath = s3_path.split('/')
+        prefix = '/'.join(filepath)
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        if 'Contents' in response:
+            json_files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.parquet')]
+            if json_files:
+                delete_response = s3_client.delete_objects(
+                    Bucket=bucket_name,
+                    Delete={
+                        'Objects': [{'Key': key} for key in json_files]
+                    }
+                )
+                print(f'deleted the following json files: {json_files}')
+            else:
+                print('no json files found in the specified directory')
+        else:
+            print('no files found in the specified directory')
     
     # First, create a branching structure
     raw_files = find_raw_files()
