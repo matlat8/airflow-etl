@@ -158,7 +158,7 @@ with DAG(dag_id=dag_id, default_args=default_args, schedule_interval=None) as da
         buckett = s3.Bucket(bucket_name)
         print('/'.join(filepath))
         json_files = [obj.key for obj in buckett.objects.filter(Prefix='/'.join(filepath)) if obj.key == file]
-        # print([obj.key for obj in buckett.objects.filter(Prefix='/'.join(filepath))])
+        print([obj.key for obj in buckett.objects.filter(Prefix='/'.join(filepath))])
         if json_files:
             delete_response = buckett.delete_objects(
                 Delete={
@@ -250,6 +250,24 @@ with DAG(dag_id=dag_id, default_args=default_args, schedule_interval=None) as da
             if file.endswith('.json'):
                 os.remove(f'temp/{file}')
         os.rmdir('temp')
+        
+        filepath = s3_path.split('/')
+        prefix = '/'.join(filepath)
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        if 'Contents' in response:
+            json_files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.parquet')]
+            if json_files:
+                delete_response = s3_client.delete_objects(
+                    Bucket=bucket_name,
+                    Delete={
+                        'Objects': [{'Key': key} for key in json_files]
+                    }
+                )
+                print(f'deleted the following json files: {json_files}')
+            else:
+                print('no json files found in the specified directory')
+        else:
+            print('no files found in the specified directory')
         
         
         
