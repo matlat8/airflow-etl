@@ -48,7 +48,8 @@ with DAG(dag_id=dag_id,
          default_args=default_args, 
          params={'start_time': Param(default=datetime.now())},
          schedule_interval=None,
-         catchup=False
+         catchup=False,
+         tags=['iRacing', 'Extraction']
          ) as dag:
         
     @task()

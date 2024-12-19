@@ -90,7 +90,11 @@ def find_files_to_process(directory='STG/iRacing/results/'):
     
 dag_id = "IrVersionResults"
 dag_timeout = timedelta(hours=1)
-with DAG(dag_id=dag_id, default_args=default_args, schedule_interval=None) as dag:
+with DAG(dag_id=dag_id, 
+         default_args=default_args, 
+         schedule_interval=None,
+         tags=['iRacing', 'ETL']
+         ) as dag:
     
     @task
     def find_raw_files():

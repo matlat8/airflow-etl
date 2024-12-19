@@ -51,7 +51,8 @@ with DAG(dag_id=dag_id,
          default_args=default_args, 
          schedule_interval=None,
          params={'starting_point': Param(default=datetime.now()), 'months': Param(default=12)},
-         catchup=False
+         catchup=False,
+         tags=['iRacing', 'Historical', 'ETL']
          ) as dag:
     
     @task()

@@ -47,7 +47,8 @@ dag_id = "IrDataFetchIncremental"
 with DAG(dag_id=dag_id, 
          default_args=default_args, 
          schedule_interval='@hourly',
-         catchup=False
+         catchup=False,
+         tags=['iRacing', 'Master', 'ETL']
          ) as dag:
     @task()
     def get_latest_endtime():
