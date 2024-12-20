@@ -3,3 +3,4 @@ requests
 b2sdk
 duckdb
 clickhouse-connect
+pendulum

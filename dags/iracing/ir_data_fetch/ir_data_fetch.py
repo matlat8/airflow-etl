@@ -3,6 +3,7 @@ from iracingdataapi.client import irDataClient
 from airflow import DAG
 from airflow.decorators import task
 from airflow.hooks.base import BaseHook
+from airflow.operators.python_operator import PythonOperator
 from airflow.models.param import Param
 import json
 import io
@@ -43,25 +44,44 @@ class BotoConnection:
             cls._instance = s3
         return cls._instance
 
+
 dag_id = "IrDataFetchDag"
 with DAG(dag_id=dag_id, 
          default_args=default_args, 
-         params={'start_time': Param(default=datetime.now())},
          schedule_interval=None,
          catchup=False,
-         tags=['iRacing', 'Extraction']
+         params={'start_time': '2023-12-19T14:25Z', 'end_time': '2023-12-19T15:25Z'},
+         #params={'start_time': Param(default=datetime.now().isoformat()), 'end_time': Param(default=(datetime.now() + timedelta(days=1)).isoformat())},
+         tags=['iRacing', 'Extraction'],
+         render_template_as_native_obj=True,
+         max_active_runs=1
          ) as dag:
+    
+
+    
+    @task()
+    def get_start(**context):
+        return [context['params']['start_time'], context['params']['end_time']]
+    
+    #@task()
+    #def get_end(**context):
+    #    return [context['params']['start_time'], context['params']['end_time']]
         
     @task()
-    def fetch_ir_data(start_time):
+    def fetch_ir_data(start_time, end_time):
+        import pendulum
         idc = get_ir_client()
         s3 = BotoConnection.get_instance()
-        print(start_time.strftime('%Y-%m-%dT%H:%MZ'))
-        search_series_data = idc.result_search_series(finish_range_begin=start_time.strftime('%Y-%m-%dT%H:%MZ'))
+        print(f'Times: {start_time}')
+        dt_start_time = pendulum.parse(start_time[0])
+        dt_end_time = pendulum.parse(start_time[1])
+        print(dt_start_time.strftime('%Y-%m-%dT%H:%MZ'))
+        print((dt_start_time + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%MZ'))
+        search_series_data = idc.result_search_series(finish_range_begin=dt_start_time.strftime('%Y-%m-%dT%H:%MZ'), finish_range_end=dt_end_time.strftime('%Y-%m-%dT%H:%MZ'))
         
         json_data = json.dumps(search_series_data)
         bytes_buffer = io.BytesIO(json_data.encode('utf-8'))
-        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/series/{start_time.strftime("%Y-%m-%d_%H-%M-%S")}-searchseries.json')
+        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/series/{dt_start_time.strftime("%Y-%m-%d_%H-%M-%S")}-searchseries.json')
         
         results = []
         result_lap_chart_data = []
@@ -83,11 +103,11 @@ with DAG(dag_id=dag_id,
         
         json_data = json.dumps(results)
         bytes_buffer = io.BytesIO(json_data.encode('utf-8'))
-        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/results/{start_time.strftime("%Y-%m-%d_%H-%M-%S")}-results.json')
+        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/results/{dt_start_time.strftime("%Y-%m-%d_%H-%M-%S")}-results.json')
 
         json_data = json.dumps(result_lap_chart_data)
         bytes_buffer = io.BytesIO(json_data.encode('utf-8'))
-        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/results_lap_chart_data/{start_time.strftime("%Y-%m-%d_%H-%M-%S")}-results_lap_chart_data.json')
+        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/results_lap_chart_data/{dt_start_time.strftime("%Y-%m-%d_%H-%M-%S")}-results_lap_chart_data.json')
 
         #json_data = json.dumps(result_lap_data)
         #bytes_buffer = io.BytesIO(json_data.encode('utf-8'))
@@ -95,8 +115,12 @@ with DAG(dag_id=dag_id,
 
         json_data = json.dumps(result_event_log)
         bytes_buffer = io.BytesIO(json_data.encode('utf-8'))
-        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/result_event_log/{start_time.strftime("%Y-%m-%d_%H-%M-%S")}-result_event_log.json')
+        s3.Bucket('ML-Clickhouse').upload_fileobj(bytes_buffer, f'STG/iRacing/result_event_log/{dt_start_time.strftime("%Y-%m-%d_%H-%M-%S")}-result_event_log.json')
     
-    ir_data = fetch_ir_data(dag.params['start_time'])
+    start = get_start()
+    #end = get_end()
+    ir_data = fetch_ir_data(start_time=start, end_time=None)
     
-    ir_data
+    start >> ir_data
+    #end >> ir_data
+    

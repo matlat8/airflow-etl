@@ -66,7 +66,7 @@ with DAG(dag_id=dag_id,
     run_data_pull_dag = TriggerDagRunOperator(
         task_id='run_data_pull_dag',
         trigger_dag_id='IrDataFetchDag',  # Replace with the ID of the DAG you want to trigger
-        conf={"start_time": "{{ task_instance.xcom_pull(task_ids='get_latest_endtime') }}"},
+        conf={"start_time": "{{ task_instance.xcom_pull(task_ids='get_latest_endtime') }}", "end_time": datetime.now().isoformat()},
         wait_for_completion=True,
     )
     

@@ -74,7 +74,7 @@ with DAG(dag_id=dag_id,
             trigger = TriggerDagRunOperator(
                 task_id=f'trigger_data_pull_dag_{period.strftime("%Y-%m-%d%H%M%S")}',
                 trigger_dag_id='IrDataFetchDag',
-                conf={"start_time": period.isoformat()},
+                conf={"start_time": period.isoformat(), "end_time": (period + timedelta(hours=1)).isoformat()},
                 wait_for_completion=True,
             )
             trigger.execute(context=kwargs)
