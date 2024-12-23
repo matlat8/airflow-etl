@@ -48,7 +48,8 @@ with DAG(dag_id=dag_id,
          default_args=default_args, 
          schedule_interval='@hourly',
          catchup=False,
-         tags=['iRacing', 'Master', 'ETL']
+         tags=['iRacing', 'Master', 'ETL'],
+         max_active_runs=1
          ) as dag:
     @task()
     def get_latest_endtime():
