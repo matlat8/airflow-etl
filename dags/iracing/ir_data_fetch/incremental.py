@@ -58,7 +58,7 @@ with DAG(dag_id=dag_id,
         db_conn = BaseHook.get_connection("clickhouse_prod")
         client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
         
-        result = client.query("SELECT max(end_time) FROM iracing.series")
+        result = client.query("SELECT now() - INTERVAL 1 HOUR")
         return result.result_rows[0][0]
         
 
