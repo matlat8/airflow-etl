@@ -79,4 +79,4 @@ SELECT
     loaddate
 FROM latest_records
 WHERE load_rank = 1
-  AND overall_rank = 1;
+  AND overall_rank = 1
