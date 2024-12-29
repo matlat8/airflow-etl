@@ -314,6 +314,21 @@ with DAG(dag_id=dag_id,
                 print('no json files found in the specified directory')
         else:
             print('no files found in the specified directory')
+
+    @task
+    def write_session_results():
+        import clickhouse_connect
+        
+        # Initialize the Clickhouse client
+        db_conn = BaseHook.get_connection("clickhouse_prod")
+        client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
+
+        # truncate table and write new data 
+        with open(os.path.join(py_file_path, 'CH_mv_session_results.sql'), 'r') as f:
+            script = f.read()
+        for query in script.split(';'):
+            client.command(query)
+
     
     # First, create a branching structure
     raw_files = find_raw_files()
@@ -337,3 +352,8 @@ with DAG(dag_id=dag_id,
 
     # Connect the branches using the empty operator
     empty_process >> session_results >> load_sessionresults_stg
+
+    # Tasks for creating reporting tables
+    write_session_results_to_tbl = write_session_results()
+
+    load_sessionresults_stg >> write_session_results_to_tbl
