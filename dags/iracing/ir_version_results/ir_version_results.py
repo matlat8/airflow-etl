@@ -328,7 +328,9 @@ with DAG(dag_id=dag_id,
         with open(os.path.join(py_file_path, 'CH_mv_session_results.sql'), 'r') as f:
             script = f.read()
         for query in script.split(';'):
-            client.command(query)
+            print(f'Query: {query}')
+            if len(query) > 0:
+                client.command(query)
 
     
     # First, create a branching structure
