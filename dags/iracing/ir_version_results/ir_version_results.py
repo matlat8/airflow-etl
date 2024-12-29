@@ -318,6 +318,7 @@ with DAG(dag_id=dag_id,
     @task
     def write_session_results():
         import clickhouse_connect
+        py_file_path = os.path.dirname(os.path.abspath(__file__))
         
         # Initialize the Clickhouse client
         db_conn = BaseHook.get_connection("clickhouse_prod")
