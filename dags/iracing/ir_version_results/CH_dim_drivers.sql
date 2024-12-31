@@ -55,5 +55,5 @@ WHERE
     cust_id <> 0
 ORDER BY
     cust_id;
-EXCHANGE TABLES iracing.stg_dim_drivers TO iracing.dim_drivers;
+EXCHANGE TABLES iracing.stg_dim_drivers AND iracing.dim_drivers;
 DROP TABLE iracing.stg_dim_drivers;
