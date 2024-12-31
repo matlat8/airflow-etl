@@ -331,6 +331,24 @@ with DAG(dag_id=dag_id,
             print(f'Query: {query}')
             if len(query) > 0:
                 client.command(query)
+                
+    @task
+    def write_dim_drivers():
+        import clickhouse_connect
+        py_file_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # Initialize the Clickhouse client
+        db_conn = BaseHook.get_connection("clickhouse_prod")
+        client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
+        
+        # truncate table and write new data
+        with open(os.path.join(py_file_path, 'CH_dim_drivers.sql'), 'r') as f:
+            script = f.read()
+            
+        for query in script.split(';'):
+            print(f'Query: {query}')
+            if len(query) > 0:
+                client.command(query)
 
     
     # First, create a branching structure
@@ -358,5 +376,7 @@ with DAG(dag_id=dag_id,
 
     # Tasks for creating reporting tables
     write_session_results_to_tbl = write_session_results()
+    write_dim_drivers_tbl = write_dim_drivers()
 
     load_sessionresults_stg >> write_session_results_to_tbl
+    load_sessionresults_stg >> write_dim_drivers_tbl
