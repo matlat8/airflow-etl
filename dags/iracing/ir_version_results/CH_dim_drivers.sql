@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE iracing.stg_dim_drivers
+CREATE OR REPLACE TABLE iracing.dim_drivers
     ENGINE = MergeTree()
     ORDER BY cust_id
     AS
@@ -55,5 +55,3 @@ WHERE
     cust_id <> 0
 ORDER BY
     cust_id;
-EXCHANGE TABLES iracing.stg_dim_drivers AND iracing.dim_drivers;
-DROP TABLE iracing.stg_dim_drivers;
