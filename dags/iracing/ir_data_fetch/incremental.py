@@ -50,6 +50,7 @@ with DAG(dag_id=dag_id,
          catchup=False,
          tags=['iRacing', 'Master', 'ETL'],
          ) as dag:
+    
     @task()
     def get_latest_endtime():
         import clickhouse_connect
@@ -59,14 +60,25 @@ with DAG(dag_id=dag_id,
         
         result = client.query("SELECT now() - INTERVAL 1 HOUR")
         return result.result_rows[0][0]
+    
+    @task()
+    def get_endtime():
+        import clickhouse_connect
+        
+        db_conn = BaseHook.get_connection("clickhouse_prod")
+        client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
+        
+        result = client.query("SELECT now()")
+        return result.result_rows[0][0]
         
 
     start_time = get_latest_endtime()
+    end_time = get_endtime()
     
     run_data_pull_dag = TriggerDagRunOperator(
         task_id='run_data_pull_dag',
         trigger_dag_id='IrDataFetchDag',  # Replace with the ID of the DAG you want to trigger
-        conf={"start_time": "{{ task_instance.xcom_pull(task_ids='get_latest_endtime') }}", "end_time": datetime.now().isoformat()},
+        conf={"start_time": "{{ task_instance.xcom_pull(task_ids='get_latest_endtime') }}", "end_time": "{{ task_instance.xcom_pull(task_ids='get_endtime') }}"},
         wait_for_completion=True,
     )
     
@@ -76,4 +88,7 @@ with DAG(dag_id=dag_id,
         wait_for_completion=True
     )
     
-    start_time >> run_data_pull_dag >> run_version_results_dag
+    start_time >> run_data_pull_dag 
+    end_time >> run_data_pull_dag
+    
+    run_data_pull_dag >> run_version_results_dag
