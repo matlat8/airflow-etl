@@ -4,3 +4,4 @@
 __pycache__/
 profiles.yml
 dbt/.user.yml
+dbt_projects/
