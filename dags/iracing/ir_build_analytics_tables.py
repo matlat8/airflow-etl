@@ -12,19 +12,20 @@ from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "owner": "airflow",
-    "start_date": "2024-12-08",
+    "start_date": "2024-12-31",
     "depends_on_past": False,
     "email_on_failure": True,
     "email_on_retry": False,
     "retries": 1,
-    "retry_delay": timedelta(minutes=5)
+    "retry_delay": timedelta(minutes=5),
+    "catchup": False
 }
     
 dag_id = "IrBuildAnalyticsTables"
 dag_timeout = timedelta(hours=1)
 with DAG(dag_id=dag_id, 
          default_args=default_args, 
-         schedule_interval=None,
+         schedule_interval='@daily',
          tags=['iRacing', 'ETL', 'Data Modeling']
          ) as dag:
     
