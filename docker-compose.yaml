@@ -78,8 +78,9 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/home/airflow/.dbt
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:$HOME/.dbt
     - ${AIRFLOW_PROJ_DIR:-.}/dbt_projects:/opt/airflow/dbt_projects
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt_profiles
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
