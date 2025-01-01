@@ -4,3 +4,6 @@ b2sdk
 duckdb
 clickhouse-connect
 pendulum
+dbt-core
+dbt-clickhouse
+airflow-dbt
