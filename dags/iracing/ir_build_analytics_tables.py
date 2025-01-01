@@ -33,18 +33,18 @@ with DAG(dag_id=dag_id,
     def git_pull():
         # return "ls"
         return """
-                if [ -d "~/dbt/iracing" ]; then
-                    cd ~/dbt/iracing && git pull
+                if [ -d "/opt/airflow/dbt_projects/iracing" ]; then
+                    cd /opt/airflow/dbt_projects/iracing && git pull
                 else
-                    mkdir -p ~/dbt && git clone https://github.com/matlat8/dbt_iracing ~/dbt/iracing
+                    mkdir -p ~/dbt && git clone https://github.com/matlat8/dbt_iracing /opt/airflow/dbt_projects/iracing
                 fi
-                ls ~/dbt/iracing
+                ls /opt/airflow/dbt_projects/iracing
                 """
                 
     with TaskGroup(group_id='dim_drivers') as dim_drivers:
         create_dim_drivers = DbtRunOperator(
             task_id='dim_drivers',
-            dir='/home/airflow/dbt/iracing',
+            dir=f'/opt/airflow/dbt_projects/iracing',
             target='prod',
             models='dim_drivers',
             retries=0
@@ -52,7 +52,7 @@ with DAG(dag_id=dag_id,
 
         test_dim_drivers = DbtTestOperator(
             task_id='test_dim_drivers',
-            dir='/home/airflow/dbt/iracing',
+            dir='/opt/airflow/dbt_projects/iracing',
             target='prod',
             models='dim_drivers',
             retries=0
