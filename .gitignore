@@ -2,3 +2,5 @@
 /.vscode
 /logs
 __pycache__/
+profiles.yml
+dbt/.user.yml
