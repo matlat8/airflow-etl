@@ -58,7 +58,7 @@ with DAG(dag_id=dag_id,
         db_conn = BaseHook.get_connection("clickhouse_prod")
         client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
         
-        result = client.query("SELECT now() - INTERVAL 1 HOUR")
+        result = client.query("SELECT UTC_timestamp() - INTERVAL 1 HOUR")
         return result.result_rows[0][0]
     
     @task()
@@ -68,7 +68,7 @@ with DAG(dag_id=dag_id,
         db_conn = BaseHook.get_connection("clickhouse_prod")
         client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
         
-        result = client.query("SELECT now()")
+        result = client.query("SELECT UTC_timestamp()")
         return result.result_rows[0][0]
         
 
