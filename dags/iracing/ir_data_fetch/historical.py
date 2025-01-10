@@ -50,21 +50,27 @@ dag_id = "IrDataFetchHistorical"
 with DAG(dag_id=dag_id, 
          default_args=default_args, 
          schedule_interval=None,
-         params={'starting_point': Param(default=datetime.now()), 'months': Param(default=12)},
+         params={'starting_point': Param(default='2024-12-01 00:00:00.000000+00:00'), 'ending_point': Param(default='2025-01-01 00:00:00.000000+00:00')},
          catchup=False,
          tags=['iRacing', 'Historical', 'ETL']
          ) as dag:
     
     @task()
-    def get_history_periods():
-        start_date = dag.params['starting_point'] - timedelta(days=dag.params['months'] * 30)
-        end_date = dag.params['starting_point']
+    def get_history_periods(**kwargs):
+        dag_run = kwargs.get('dag_run')
+        start_date_str = dag_run.conf.get('starting_point', dag.params['starting_point'])
+        end_date_str = dag_run.conf.get('ending_point', dag.params['ending_point'])
+        
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S.%f%z")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S.%f%z")
         hours = int((end_date - start_date).total_seconds() / 3600)
         history_periods = []
         
         for i in range(hours):
             period = start_date + timedelta(hours=i)
             history_periods.append(period)
+            
+        history_periods.sort(reverse=True)
         
         return history_periods
     
