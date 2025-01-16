@@ -367,6 +367,8 @@ with DAG(dag_id=dag_id,
             print(f'Query: {query}')
             if len(query) > 0:
                 client.command(query)
+                
+        return 
 
     
     # First, create a branching structure
