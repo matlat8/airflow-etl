@@ -1,6 +1,6 @@
-truncate table iracing.mv_session_results;
-
-INSERT INTO iracing.mv_session_results
+CREATE OR REPLACE TABLE iracing_stg.stg_mv_session_results 
+    ENGINE = Memory
+    AS
 WITH latest_records AS (
     SELECT *,
            row_number() OVER (
@@ -80,3 +80,4 @@ SELECT
 FROM latest_records
 WHERE load_rank = 1
   AND overall_rank = 1;
+EXCHANGE TABLES iracing_stg.stg_mv_session_results AND iracing.mv_session_results;
