@@ -369,6 +369,26 @@ with DAG(dag_id=dag_id,
                 client.command(query)
                 
         return 
+    
+    @task
+    def write_results_table():
+        import clickhouse_connect
+        py_file_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # Initialize the Clickhouse client
+        db_conn = BaseHook.get_connection("clickhouse_prod")
+        client = clickhouse_connect.get_client(host=db_conn.host, username=db_conn.login, password=db_conn.password, port=db_conn.port)
+        
+        # truncate table and write new data
+        with open(os.path.join(py_file_path, 'CH_results.sql'), 'r') as f:
+            script = f.read()
+            
+        for query in script.split(';'):
+            print(f'Query: {query}')
+            if len(query) > 0:
+                client.command(query)
+                
+        return 
 
     
     # First, create a branching structure
@@ -398,7 +418,8 @@ with DAG(dag_id=dag_id,
     write_session_results_to_tbl = write_session_results()
     write_dim_drivers_tbl = write_dim_drivers()
     write_fct_irating_distribution_tbl = write_fct_irating_distribution()
+    write_results = write_results_table()
 
     load_sessionresults_stg >> write_session_results_to_tbl
-    load_sessionresults_stg >> write_dim_drivers_tbl
+    load_sessionresults_stg >> write_dim_drivers_tbl >> load_sessionresults_stg
     load_sessionresults_stg >> write_fct_irating_distribution_tbl
