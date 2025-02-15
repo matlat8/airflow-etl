@@ -420,6 +420,6 @@ with DAG(dag_id=dag_id,
     write_fct_irating_distribution_tbl = write_fct_irating_distribution()
     write_results = write_results_table()
 
-    load_sessionresults_stg >> write_session_results_to_tbl
-    load_sessionresults_stg >> write_dim_drivers_tbl >> write_results
+    load_sessionresults_stg >> write_session_results_to_tbl >> write_results
+    load_sessionresults_stg >> write_dim_drivers_tbl
     load_sessionresults_stg >> write_fct_irating_distribution_tbl
